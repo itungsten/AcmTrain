@@ -1,56 +1,82 @@
 #include<bits/stdc++.h>
-#define int long
-//懒人做法
 using namespace std;
-const int N=10005;
-const int M=10;
-const int C=10005;
-//和G题的唯一区别在于数据规模
-int n,m,c,f[C];
-//n是普通物品个数
-//m是神奇物品个数
-//c是背包总体积
+#define int long long
+const int N=5e5+5;
+const int INF=LONG_LONG_MAX/2;
+//开long long就用long long的1/2咯
+int n,m;
+//节点数，边数
 inline int read(){
-    int x=0,f=1;char c=getchar();
-    while(!isdigit(c))c=='-'&&(f=-1),c=getchar();
+    char c=getchar();int x=0;
+    while(!isdigit(c))c=getchar();
     while(isdigit(c))x=(x<<1)+(x<<3)+c-48,c=getchar();
-    return x*f;
+    return x;
 }
-signed main(){
-    n=read(),m=read(),c=read();
-    while(n--){
-        int vi=read(),wi=read(),di=read(),i;// vi：volume   wi：wealth   di是最多个数
+int a[N], e[N], l[N],in[N], out[N];
+//a 节点权值
+//e early time
+//l late time
+//in in degree
+//out out degree
 
-        //二进制拆分，把多重背包拆分为多个01背包
-        for(i=0;(1<<(i+1))-1<=di;++i){
-            for(int j=c;j>=(vi<<i);--j){
-                f[j]=max(f[j],f[j-(vi<<i)]+(wi<<i));
-                //要或者不要
-            }
-        }
-        int resi=di-(1<<i)+1;
-        //值得注意的是，这里的应该是i，而不是i+1，应为在最后一次成功拆分后i自动加上了1
-        if(resi){
-            vi*=resi,wi*=resi;
-            for(int j=c;j>=vi;--j)f[j]=max(f[j],f[j-vi]+wi);
-            //处理余留下来的数值，都是套路
-        }
+vector<int> edgeFor[N];
+vector <int> edgeBack[N];
+//存放正向边和反向边
+void addEdge(int u, int v)
+{
+    ++in[v], ++out[u];
+    edgeFor[u].push_back(v);
+    edgeBack[v].push_back(u);
+}
+
+
+int getEarly(int pos)
+{
+    if (e[pos])return e[pos];
+    for (int i = 0; i < edgeBack[pos].size(); ++i)
+    {
+    	int to=edgeBack[pos][i];
+        e[pos] = max(e[pos], getEarly(to)+a[pos]);
+        //early要max，取前方最迟
     }
-    while(m--){
-        //神奇物品
-        //这里就要利用分组背包和泛化物品的概念
-        int x=read(),y=read(),z=read();
-        for(int i=c;i>=0;--i){
-            //注意这里一定要倒序，否则滚动数组就会出错
-            for(int j=0;j<=c;++j){
-                //注意这里j一定要包含0，因为这题反人类地让z可以不为0
-                int wi=x*j*j+y*j+z;
-                if(i>=j)f[i]=max(f[i],f[i-j]+wi);
-                else break;
-            }
-        }
+    return e[pos];
+}
+
+int getLate(int pos)
+{
+    if (l[pos] != INF)return l[pos];
+    for (int i = 0; i < edgeFor[pos].size(); ++i)
+    {
+        int to=edgeFor[pos][i];
+        l[pos] = min(l[pos], getLate(to) - a[to]);
+        //取后方最早
     }
-    printf("%ld",f[c]);
-    //稍微注意一下是long
+    return l[pos];
+}
+signed main() {
+    n = read(), m = read();
+    for (int i = 1; i <= n; ++i)a[i] = read();
+    for (int i = 1; i <= m; ++i)
+    {
+        int u = read(), v = read();
+        addEdge(u, v);
+    }
+    for (int i = 1; i <= n; ++i)
+    {
+        if (!in[i])addEdge(0, i);
+        if (!out[i])addEdge(i, n + 1);
+    }
+    //添加0号超级源点，n+1号超级汇点
+    int endTime = getEarly(n+1);
+    fill(l, l+n+1, INF);
+    l[n + 1] = endTime;
+    getLate(0);
+    int sum = 0;
+    for (int i = 0; i <= n+1; ++i)
+    {
+        sum += l[i] - e[i];
+    }
+    //总摸鱼时间
+    printf("%lld\n%lld",endTime,sum);
     return 0;
 }
