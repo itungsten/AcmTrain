@@ -6,18 +6,15 @@ inline int read(){
 	while(isdigit(c))x=(x<<1)+(x<<3)+c-48,c=getchar();
 	return x;
 }
-int n;
-bool exist;
+//slow read
 int main(){
-	n=read();
-	for(int i=0,tmp;i<n;++i){
-		tmp=read();
-		if(tmp&1){
-			exist=true;
-			break;
+	int n=read();
+	for(int i=0;i<n;++i)
+		if(read()&1){
+			//题目保证序列中全为正整数，故可以使用&运算对2取模
+			//如果存在奇数
+			printf("Alice");
+			return 0;
 		}
-	}
-	if(exist)printf("Alice");
-	else printf("Bob");
-	return 0;
+	printf("Bob");
 }
